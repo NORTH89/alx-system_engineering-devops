@@ -1,38 +1,24 @@
-exec { 'update packages':
-  command => '/usr/bin/apt-get update'
+# Setup New Ubuntu server with nginx
+
+exec { 'update system':
+        command => '/usr/bin/apt-get update',
 }
 
-# Ensure the Nginx package is installed
 package { 'nginx':
-  ensure => 'installed',
+	ensure => 'installed',
+	require => Exec['update system']
 }
 
-# Ensure the Nginx service is enabled and running
-service { 'nginx':
-  ensure  => 'running',
-  enable  => true,
-  require => Package['nginx'],
+file {'/var/www/html/index.html':
+	content => 'Hello World!'
 }
 
-# Create an Nginx configuration file
-file { '/etc/nginx/sites-available/default':
-  ensure  => 'file',
-  content => '
-    server {
-        listen 80;
-        server_name _;
+exec {'redirect_me':
+	command => 'sed -i "24i\	rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;" /etc/nginx/sites-available/default',
+	provider => 'shell'
+}
 
-        location / {
-            root   /var/www/html;
-            index  index.html;
-            try_files $uri /index.html;
-
-            # Custom response containing "Hello World!"
-            add_header Content-Type text/html;
-            return 200 "Hello World!";
-        }
-    }
-  ',
-  require => Package['nginx'],
-  notify  => Service['nginx'],
+service {'nginx':
+	ensure => running,
+	require => Package['nginx']
 }
