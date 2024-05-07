@@ -1,42 +1,31 @@
 #!/usr/bin/python3
-"""
-    List the top 10 hot posts
-"""
-
-
+"""Contains recurse function"""
 import requests
 
 
-def top_ten(subreddit):
-    """
-        returns a list of the top 10 hot posts in
-        a given subreddit
-        Args:
-        subreddit: Account to search
-    """
-    userAgent = 'Python.wsl2.windows.ApiProject:v1 (by Dry-Improvement-3814)'
-
-    if subreddit is None or type(subreddit) is not str:
-        print(None)
-
-    url = 'https://reddit.com/r/{}/hot.json'.format(subreddit)
-
-    _headers = {
-        'User-Agent': userAgent
+def recurse(subreddit, hot_list=[], after="", count=0):
+    """Returns a list of titles of all hot posts on a given subreddit."""
+    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
+    headers = {
+        "User-Agent": "0x16-api_advanced:project:\
+v1.0.0 (by /u/firdaus_cartoon_jr)"
     }
-
-    _params = {
-        'limit': 10
+    params = {
+        "after": after,
+        "count": count,
+        "limit": 100
     }
+    response = requests.get(url, headers=headers, params=params,
+                            allow_redirects=False)
+    if response.status_code == 404:
+        return None
 
-    with requests.get(url, headers=_headers, params=_params) as response:
-        titles = response.json()
-        if response.status_code == 200:
-            ch = titles.get('data').get('children')
-            if ch is None or (len(ch) > 0 and ch[0].get('kind') != 't3'):
-                print('None')
-            else:
-                for c in ch:
-                    print(c.get('data').get('title'))
-        else:
-            print('None')
+    results = response.json().get("data")
+    after = results.get("after")
+    count += results.get("dist")
+    for c in results.get("children"):
+        hot_list.append(c.get("data").get("title"))
+
+    if after is not None:
+        return recurse(subreddit, hot_list, after, count)
+    return hot_list
