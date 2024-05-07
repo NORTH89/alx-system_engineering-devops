@@ -1,25 +1,27 @@
 #!/usr/bin/python3
-""" get redit subs """
+"""
+    Get number of subscribers
+"""
+
+
 import requests
 
 
 def number_of_subscribers(subreddit):
-    """ get number of subscribers """
-    url = f"https://www.reddit.com/r/{subreddit}/about.json"
-    headers = {"User-Agent": "MyCoolReqName/1.0 (by /u/ReplyAdventurous5909)"}
-    response = requests.get(url, headers=headers)
+    """
+        Returns number of subscribers for given subredit
+        Args:
+            subreddit: Account to search
+    """
+    userAgent = 'Python.wsl2.windows.ApiProject:v1 (by Dry-Improvement-3814)'
 
-    if response.status_code == 200:
-        data = response.json()
-        return data['data']['subscribers']
-    else:
+    if subreddit is None or type(subreddit) is not str:
         return 0
 
+    url = 'https://reddit.com/r/{}/about.json'.format(subreddit)
 
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Please pass an argument for the subreddit to search.")
-    else:
-        subreddit = sys.argv[1]
-        print("{:d}".format(number_of_subscribers(subreddit)))
+    _headers = {'User-Agent': userAgent}
+
+    with requests.get(url, headers=_headers) as response:
+        subscribers = response.json().get('data', {}).get("subscribers", 0)
+        return subscribers
