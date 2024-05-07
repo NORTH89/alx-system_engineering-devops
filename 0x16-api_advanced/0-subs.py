@@ -2,7 +2,9 @@
 """ get redit subs """
 import requests
 
+
 def number_of_subscribers(subreddit):
+    """ get number of subscribers """
     url = f"https://www.reddit.com/r/{subreddit}/about.json"
     headers = {"User-Agent": "MyCoolReqName/1.0 (by /u/ReplyAdventurous5909)"}
     response = requests.get(url, headers=headers)
@@ -12,6 +14,7 @@ def number_of_subscribers(subreddit):
         return data['data']['subscribers']
     else:
         return 0
+
 
 if __name__ == "__main__":
     import sys
