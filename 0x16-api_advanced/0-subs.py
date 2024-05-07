@@ -1,27 +1,24 @@
 #!/usr/bin/python3
-"""
-    Get number of subscribers
-"""
-
-
+'''
+    this module contains the function top_ten
+'''
 import requests
+from sys import argv
 
 
-def number_of_subscribers(subreddit):
-    """
-        Returns number of subscribers for given subredit
-        Args:
-            subreddit: Account to search
-    """
-    userAgent = 'Python.wsl2.windows.ApiProject:v1 (by Dry-Improvement-3814)'
+def top_ten(subreddit):
+    '''
+        returns the top ten posts for a given subreddit
+    '''
+    user = {'User-Agent': 'Lizzie'}
+    url = requests.get('https://www.reddit.com/r/{}/hot/.json?limit=10'
+                       .format(subreddit), headers=user).json()
+    try:
+        for post in url.get('data').get('children'):
+            print(post.get('data').get('title'))
+    except Exception:
+        print(None)
 
-    if subreddit is None or type(subreddit) is not str:
-        return 0
 
-    url = 'https://reddit.com/r/{}/about.json'.format(subreddit)
-
-    _headers = {'User-Agent': userAgent}
-
-    with requests.get(url, headers=_headers) as response:
-        subscribers = response.json().get('data', {}).get("subscribers", 0)
-        return subscribers
+if __name__ == "__main__":
+    top_ten(argv[1])
