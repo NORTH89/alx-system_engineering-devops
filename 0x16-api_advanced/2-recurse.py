@@ -1,26 +1,50 @@
 #!/usr/bin/python3
 """
-    get all hots
+2-main
 """
 import requests
+import sys
 
 
-def recurse(subreddit, hot_list=[], after=""):
-    """
-        List containing the titles of all hot
-        articles for a given subreddit
-    """
-    url = 'https://www.reddit.com/r/{}/hot.json'.format(subreddit)
-    res = requests.get(url, headers={'User-Agent': 'AngentMEGO'},
-                       params={'after': after})
+def recurse(subreddit, hot_list=[]):
+    """This function recursively retrieves titles of all hot
+    articles for a subreddit."""
+    url = f"https://reddit.com/r/{subreddit}/hot.json?limit=100"
+    headers = {
+        "User-Agent": "My Cool Custom User Agent"
+    }  # Replace with your own user agent
 
-    if after is None:
-        return hot_list
+    try:
+        response = requests.get(url, allow_redirects=False, headers=headers)
+        response.raise_for_status()
 
-    if res.status_code == 200:
-        res = res.json()
-        after = res.get('data').get('after')
-        hots = res.get('data').get('children')
-        hot_list += list(map(lambda elm: elm.get('data').get('title'), hots))
-        return recurse(subreddit, hot_list, after)
-    return None
+        data = response.json()
+        posts = data.get("data", {}).get("children", [])
+        for post in posts:
+            title = post.get("data", {}).get("title")
+            if title:
+                hot_list.append(title)
+
+        after = data.get("data", {}).get("after")
+        if after:  # Recursive call for next page if available
+            return recurse(
+                subreddit,
+                hot_list + recurse(subreddit, after=after),
+            )
+        else:
+            return hot_list  # No more pages, return accumulated titles
+
+    except (requests.exceptions.RequestException, KeyError):
+        return None  # Handle request errors and missing data keys
+
+
+if __name__ == "__main__":
+    number_of_subscribers = __import__("2-recurse").recurse
+    if len(sys.argv) < 2:
+        print("Please pass an argument for the subreddit to search.")
+    else:
+        result = recurse(sys.argv[1])
+        if result is not None:
+            print(len(result))
+        else:
+            print("None")
