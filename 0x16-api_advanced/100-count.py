@@ -1,77 +1,50 @@
 #!/usr/bin/python3
-"""
-100-main
-"""
+""" Module for a function that queries the Reddit API recursively."""
+
+
 import requests
-import sys
-from collections import Counter
 
 
-def split_and_lowercase(text):
+def count_words(subreddit, word_list, after='', word_dict={}):
+    """ A function that queries the Reddit API parses the title of
+    all hot articles, and prints a sorted count of given keywords
+    (case-insensitive, delimited by spaces.
+    Javascript should count as javascript, but java should not).
+    If no posts match or the subreddit is invalid, it prints nothing.
     """
-    Splits text into words, converting them to lowercase and
-    removing punctuation at the end.
-    """
-    words = [word.strip().lower() for word in text.split()]
-    return [
-        word for word in words if not word.endswith((".", "!", "?"))
-    ]  # Remove trailing punctuation
 
+    if not word_dict:
+        for word in word_list:
+            if word.lower() not in word_dict:
+                word_dict[word.lower()] = 0
 
-def count_words(subreddit, word_list, keywords={}, after=None):
-    """
-    This function recursively retrieves and counts keyword
-    occurrences from hot articles.
+    if after is None:
+        wordict = sorted(word_dict.items(), key=lambda x: (-x[1], x[0]))
+        for word in wordict:
+            if word[1]:
+                print('{}: {}'.format(word[0], word[1]))
+        return None
 
-    Args:
-        subreddit: The name of the subreddit to query.
-        word_list: The list of keywords to search for.
-        keywords (dict, optional): Accumulates keyword
-        counts across recursive calls (default: {}).
-        after (str, optional): The "after" parameter for pagination
-        (default: None).
+    url = 'https://www.reddit.com/r/{}/hot/.json'.format(subreddit)
+    header = {'user-agent': 'redquery'}
+    parameters = {'limit': 100, 'after': after}
+    response = requests.get(url, headers=header, params=parameters,
+                            allow_redirects=False)
 
-    Returns:
-        None: If no posts match or the subreddit is invalid.
-    """
-    url = f"https://reddit.com/r/{subreddit}/hot.json?limit=100"
-    headers = {
-        "User-Agent": "My Cool Custom User Agent"
-    }  # Replace with your own user agent
+    if response.status_code != 200:
+        return None
 
     try:
-        response = requests.get(url, allow_redirects=False, headers=headers)
-        response.raise_for_status()
+        hot = response.json()['data']['children']
+        aft = response.json()['data']['after']
+        for post in hot:
+            title = post['data']['title']
+            lower = [word.lower() for word in title.split(' ')]
 
-        data = response.json()
-        posts = data.get("data", {}).get("children", [])
-        for post in posts:
-            title = post.get("data", {}).get("title")
-            if title:
-                for word in split_and_lowercase(title):
-                    if word in word_list:
-                        keywords[word] = keywords.get(word, 0) + 1
+            for word in word_dict.keys():
+                word_dict[word] += lower.count(word)
 
-        after = data.get("data", {}).get("after")
-        if after:  # Recursive call for next page if available
-            count_words(subreddit, word_list, keywords, after=after)
+    except Exception:
+        return None
 
-    except (requests.exceptions.RequestException, KeyError):
-        return None  # Handle request errors and missing data keys
-
-    if keywords:  # Print results if keywords were found
-        for word, count in sorted(
-            keywords.items(), key=lambda item: (-item[1], item[0])
-        ):
-            print(f"{word}: {count}")
-
-
-if __name__ == "__main__":
-    number_of_subscribers = __import__("100-count").count_words
-    if len(sys.argv) < 3:
-        print("Usage: {} <subreddit> <list of keywords>".format(sys.argv[0]))
-        print(
-            "Ex: {} programming 'python java javascript'".format(sys.argv[0]),
-        )
-    else:
-        count_words(sys.argv[1], sys.argv[2:])
+    count_words(subreddit, word_list, aft, word_dict)
