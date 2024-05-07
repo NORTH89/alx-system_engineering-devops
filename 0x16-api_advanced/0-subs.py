@@ -1,9 +1,6 @@
 #!/usr/bin/python3
-"""
-0-main
-"""
+""" get redit subs """
 import requests
-import sys
 
 
 def number_of_subscribers(subreddit):
@@ -11,6 +8,7 @@ def number_of_subscribers(subreddit):
         return 0
     url = f"https://www.reddit.com/r/{subreddit}/about.json"
     headers = {"User-Agent": "MyCoolReqName/1.0 (by /u/ReplyAdventurous5909)"}
+
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         data = response.json()
