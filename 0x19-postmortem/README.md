@@ -1,5 +1,7 @@
 ## Postmortem issue Checkout Outage
 
+![postmortem](https://wac-cdn.atlassian.com/dam/jcr:77b7d90d-6b76-47f2-bc2a-f547f8a3eacb/IMMKT-153-illustration-for-postmortem-page.png?cdnVersion=1719)
+
 **Issue Summary:**
 
 On May 12, 2024, our e-commerce platform experienced a checkout outage from 1:30 PM PST to 2:30 PM PST. This resulted in users encountering a "Payment Processing Error" message during checkout. Approximately 20% of users attempting checkout during this timeframe were impacted.
